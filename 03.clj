@@ -1,4 +1,6 @@
-(require '[clojure.string :as str])
+(require '[clojure.string :as str]
+         '[clojure.set :as set])
+
 (def input (slurp "03.input.txt"))
 
 (def line-matcher #"#(\d+) @ (\d+),(\d+): (\d+)x(\d+)")
@@ -55,28 +57,35 @@
 (def ints (intersections (parse input)))
 
 (defn points [rect]
-  (let [
-(def answer1 [input]
-  (loop [points (mapcat points input) seen #{} counted #{}]
-    (if (empty? points)
-      (count counted)
-      (let [point (first points) next-points (rest points)]
-        (if (contains? seen point)
-          ())))
-
-(def seen #{})
-(def counted #{})
-
-(def rect-points (mapcat points input))
-
-corners (rect-to-corners rect)]
+  (let [corners (rect-to-corners rect)]
     (for [x (range (corners :x1) (corners :x2))
           y (range (corners :y1) (corners :y2))]
          [x y])))
 
-(defn intersection-check [point])
+(defn duplicate-points [points]
+  (:counted (reduce (fn [{:keys [seen counted] :as result} point]
+                     (cond
+                       (not (contains? seen point)) (update result :seen conj point)
+                       (not (contains? counted point)) (update result :counted conj point)
+                       :else result))
+                   {:seen #{} :counted #{}}
+                   points)))
 
-(reduce (fn [{:keys [seen counted] result} point
-             (cond
-               (not (contains? seen counted)) (assoc result ))])
-        {:seen #{} :counted #{}})
+(def answer1
+  (->> (parse input)
+       (mapcat points)
+       (duplicate-points)
+       (count)))
+
+(defn intersecting-ids [rects]
+  (reduce (fn [intersecting-ids rects]
+            (if (apply intersection rects)
+              (into intersecting-ids (map :id rects))
+              intersecting-ids))
+          #{}
+          (pairs rects)))
+
+(def answer2
+  (let [rects (parse input)]
+    (set/difference (into #{} (map :id rects))
+                    (intersecting-ids rects))))
